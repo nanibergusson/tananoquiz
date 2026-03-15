@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brachial Plexus — Drag & Drop Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & tokens ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:          #09090b;
+  --bg1:         #0f0f12;
+  --bg2:         #18181b;
+  --bg3:         #27272a;
+  --border:      rgba(255,255,255,0.06);
+  --border2:     rgba(255,255,255,0.10);
+  --border3:     rgba(255,255,255,0.16);
+  --text:        #fafafa;
+  --text2:       #a1a1aa;
+  --text3:       #52525b;
+  --accent:      #e4e4e7;
+
+  /* Badge palette */
+  --violet:      #8b5cf6;
+  --violet-dim:  rgba(139,92,246,0.15);
+  --violet-border: rgba(139,92,246,0.30);
+
+  --emerald:     #10b981;
+  --emerald-dim: rgba(16,185,129,0.12);
+  --emerald-border: rgba(16,185,129,0.28);
+
+  --sky:         #38bdf8;
+  --sky-dim:     rgba(56,189,248,0.12);
+  --sky-border:  rgba(56,189,248,0.28);
+
+  --rose:        #fb7185;
+  --rose-dim:    rgba(251,113,133,0.12);
+  --rose-border: rgba(251,113,133,0.28);
+
+  --amber:       #fbbf24;
+  --amber-dim:   rgba(251,191,36,0.12);
+  --amber-border:rgba(251,191,36,0.28);
+
+  --success-dim: rgba(34,197,94,0.12);
+  --success:     #22c55e;
+  --danger-dim:  rgba(239,68,68,0.12);
+  --danger:      #ef4444;
+
+  --radius:      8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Geist', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Grid background ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Spotlight beam ── */
+.spotlight {
+  position: fixed;
+  top: -40%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  height: 600px;
+  background: radial-gradient(ellipse at center, rgba(139,92,246,0.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Header ── */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(9,9,11,0.80);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border2);
+}
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand-icon {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, var(--violet), #6366f1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+.brand-icon::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+}
+.brand-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+.brand-tag {
+  font-size: 11px;
+  color: var(--text3);
+  font-family: 'Geist Mono', monospace;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.score-badge {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+  color: var(--text2);
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  padding: 5px 14px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.score-badge strong { color: var(--emerald); font-weight: 500; }
+
+/* shadcn-style button */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: 'Geist', sans-serif;
+  border-radius: var(--radius);
+  border: 1px solid var(--border3);
+  background: var(--bg2);
+  color: var(--text2);
+  cursor: pointer;
+  transition: background .15s, color .15s, border-color .15s;
+  letter-spacing: -0.01em;
+}
+.btn:hover { background: var(--bg3); color: var(--text); border-color: var(--border3); }
+.btn:active { transform: scale(0.98); }
+
+/* ── Progress ── */
+.progress-track {
+  height: 2px;
+  background: var(--bg3);
+  position: relative;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--violet), var(--sky));
+  transition: width .5s cubic-bezier(.4,0,.2,1);
+  width: 0%;
+  position: relative;
+}
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 60px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6));
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+@keyframes shimmer { 0%,100%{opacity:0} 50%{opacity:1} }
+
+/* ── Main layout ── */
+.main {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 24px 80px;
+  display: grid;
+  grid-template-columns: 1fr 200px;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ── Section separator ── */
+.section-sep {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.sep-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.sep-label {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text3);
+  font-family: 'Geist Mono', monospace;
+}
+.sep-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── Zone groups ── */
+.zone-group { margin-bottom: 18px; }
+
+/* ── Drop zone — Aceternity card style ── */
+.drop-zone {
+  position: relative;
+  min-height: 48px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border2);
+  background: var(--bg1);
+  display: flex;
+  align-items: center;
+  padding: 6px 14px;
+  margin-bottom: 7px;
+  transition: border-color .15s, background .15s, transform .12s, box-shadow .15s;
+  gap: 10px;
+  cursor: default;
+  overflow: hidden;
+}
+
+/* Gradient border on hover — Aceternity trick */
+.drop-zone::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  padding: 1px;
+  background: linear-gradient(135deg, transparent, transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity .2s;
+  pointer-events: none;
+}
+.drop-zone:not(.filled):hover::before {
+  background: linear-gradient(135deg, var(--violet), var(--sky));
+  opacity: 1;
+}
+.drop-zone:not(.filled):hover {
+  background: rgba(139,92,246,0.04);
+  transform: translateY(-1px);
+}
+
+.drop-zone.drag-over {
+  border-color: var(--sky);
+  background: var(--sky-dim);
+  box-shadow: 0 0 0 1px var(--sky), inset 0 0 20px rgba(56,189,248,0.05);
+  transform: scale(1.005);
+}
+
+.drop-zone.correct {
+  border-color: var(--success);
+  background: var(--success-dim);
+  box-shadow: 0 0 0 1px rgba(34,197,94,0.2);
+  animation: pop .35s cubic-bezier(.175,.885,.32,1.275);
+}
+.drop-zone.wrong {
+  border-color: var(--danger);
+  background: var(--danger-dim);
+  box-shadow: 0 0 0 1px rgba(239,68,68,0.2);
+  animation: shake .4s ease;
+}
+
+@keyframes pop { 0%{transform:scale(.96)} 55%{transform:scale(1.025)} 100%{transform:scale(1)} }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+
+.zone-placed-text {
+  font-size: 13px;
+  font-weight: 500;
+  flex: 1;
+  letter-spacing: -0.01em;
+}
+.correct .zone-placed-text { color: var(--success); }
+.wrong   .zone-placed-text { color: var(--danger); }
+
+.zone-hint {
+  font-family: 'Geist Mono', monospace;
+  font-size: 10px;
+  color: var(--text3);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 20px;
+  margin-left: auto;
+  flex-shrink: 0;
+  letter-spacing: .04em;
+}
+.filled .zone-hint { display: none; }
+
+.status-icon {
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+  display: none;
+}
+.correct .status-icon { display: block; color: var(--success); }
+.wrong   .status-icon { display: block; color: var(--danger); }
+
+/* Zone placeholder text */
+.zone-placeholder {
+  font-size: 12px;
+  color: var(--text3);
+  font-family: 'Geist Mono', monospace;
+  flex: 1;
+}
+.filled .zone-placeholder { display: none; }
+
+/* ── Chip bank — Aceternity card ── */
+.bank-card {
+  position: sticky;
+  top: 76px;
+  background: var(--bg1);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-xl);
+  padding: 14px 12px;
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  /* Aceternity glassy inner glow */
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 0 0 1px rgba(255,255,255,0.02);
+}
+.bank-card::-webkit-scrollbar { width: 3px; }
+.bank-card::-webkit-scrollbar-track { background: transparent; }
+.bank-card::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 2px; }
+
+.bank-header {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .10em;
+  text-transform: uppercase;
+  color: var(--text3);
+  font-family: 'Geist Mono', monospace;
+  padding: 0 4px;
+  margin-bottom: 12px;
+}
+
+#chip-bank { display: flex; flex-direction: column; gap: 5px; }
+
+/* ── Chips — shadcn Badge style ── */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: grab;
+  border: 1px solid;
+  transition: transform .12s, box-shadow .12s, opacity .12s;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+}
+/* Shimmer stripe on hover */
+.chip::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; bottom: 0;
+  width: 50%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+  transform: skewX(-20deg);
+  transition: left .3s ease;
+}
+.chip:hover::after { left: 150%; }
+.chip:hover { transform: translateX(-3px); box-shadow: 3px 3px 0 rgba(0,0,0,.4); }
+.chip:active { cursor: grabbing; transform: scale(1.04) translateX(-2px); }
+.chip.dragging { opacity: .3; }
+
+.chip-violet { background: var(--violet-dim); border-color: var(--violet-border); color: #c4b5fd; }
+.chip-emerald{ background: var(--emerald-dim); border-color: var(--emerald-border); color: #6ee7b7; }
+.chip-sky    { background: var(--sky-dim);    border-color: var(--sky-border);    color: #7dd3fc; }
+.chip-rose   { background: var(--rose-dim);   border-color: var(--rose-border);   color: #fda4af; }
+.chip-amber  { background: var(--amber-dim);  border-color: var(--amber-border);  color: #fde68a; }
+
+/* ── Victory card — Aceternity ── */
+#victory {
+  display: none;
+  grid-column: 1 / -1;
+  position: relative;
+  background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(56,189,248,0.06));
+  border: 1px solid rgba(34,197,94,0.25);
+  border-radius: var(--radius-xl);
+  padding: 28px 32px;
+  text-align: center;
+  margin-top: 6px;
+  overflow: hidden;
+  animation: pop .5s cubic-bezier(.175,.885,.32,1.275);
+}
+#victory::before {
+  content: '';
+  position: absolute;
+  top: -80px; left: 50%; transform: translateX(-50%);
+  width: 300px; height: 200px;
+  background: radial-gradient(ellipse, rgba(34,197,94,0.15), transparent 70%);
+  pointer-events: none;
+}
+#victory h3 {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--success);
+  margin-bottom: 6px;
+}
+#victory p {
+  font-size: 14px;
+  color: var(--text2);
+  font-family: 'Geist Mono', monospace;
+}
+#victory .v-score {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 6px 18px;
+  font-size: 13px;
+  font-family: 'Geist Mono', monospace;
+  color: var(--text2);
+  margin-top: 12px;
+}
+#victory .v-score strong { color: var(--success); }
+
+/* ── Responsive ── */
+@media (max-width: 700px) {
+  .main { grid-template-columns: 1fr; padding: 16px 14px 40px; }
+  .bank-card { position: static; max-height: none; }
+  header .header-inner { padding: 0 16px; }
+  .brand-tag { display: none; }
+  .chip { font-size: 11px; padding: 5px 10px; }
+}
+</style>
+</head>
+<body>
+
+<div class="spotlight"></div>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-icon">⚡</div>
+      <div>
+        <div class="brand-name">Brachial Plexus Quiz</div>
+        <div class="brand-tag">anatomy · drag & drop</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="score-badge" id="score-txt"><strong id="sc-c">0</strong> / <span id="sc-a">0</span> correct</div>
+      <button class="btn" onclick="resetQuiz()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Reset
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="progress-track"><div class="progress-fill" id="prog"></div></div>
+
+<div class="main">
+  <div id="board-col"></div>
+
+  <div>
+    <div class="bank-card">
+      <div class="bank-header">Label bank</div>
+      <div id="chip-bank"></div>
+    </div>
+  </div>
+
+  <div id="victory">
+    <h3 id="v-title">Complete!</h3>
+    <p id="v-sub">All structures placed.</p>
+    <div class="v-score"><strong id="v-pct">0%</strong> accuracy &nbsp;·&nbsp; <span id="v-detail"></span></div>
+  </div>
+</div>
+
+<script>
+const ZONES = [
+  {id:'c5',  group:'Roots',    hint:'root',    chip:'C5 root',                       chipClass:'chip-violet', pip:'#8b5cf6'},
+  {id:'c6',  group:'Roots',    hint:'root',    chip:'C6 root',                       chipClass:'chip-violet', pip:'#8b5cf6'},
+  {id:'c7',  group:'Roots',    hint:'root',    chip:'C7 root',                       chipClass:'chip-violet', pip:'#8b5cf6'},
+  {id:'c8',  group:'Roots',    hint:'root',    chip:'C8 root',                       chipClass:'chip-violet', pip:'#8b5cf6'},
+  {id:'t1',  group:'Roots',    hint:'root',    chip:'T1 root',                       chipClass:'chip-violet', pip:'#8b5cf6'},
+  {id:'ut',  group:'Trunks',   hint:'trunk',   chip:'Upper trunk (C5–C6)',           chipClass:'chip-emerald',pip:'#10b981'},
+  {id:'mt',  group:'Trunks',   hint:'trunk',   chip:'Middle trunk (C7)',             chipClass:'chip-emerald',pip:'#10b981'},
+  {id:'lt',  group:'Trunks',   hint:'trunk',   chip:'Lower trunk (C8–T1)',           chipClass:'chip-emerald',pip:'#10b981'},
+  {id:'lc',  group:'Cords',    hint:'cord',    chip:'Lateral cord',                  chipClass:'chip-sky',    pip:'#38bdf8'},
+  {id:'pc',  group:'Cords',    hint:'cord',    chip:'Posterior cord',                chipClass:'chip-sky',    pip:'#38bdf8'},
+  {id:'mc',  group:'Cords',    hint:'cord',    chip:'Medial cord',                   chipClass:'chip-sky',    pip:'#38bdf8'},
+  {id:'msc', group:'Terminal', hint:'terminal',chip:'Musculocutaneous n.',           chipClass:'chip-rose',   pip:'#fb7185'},
+  {id:'med', group:'Terminal', hint:'terminal',chip:'Median nerve',                  chipClass:'chip-rose',   pip:'#fb7185'},
+  {id:'rad', group:'Terminal', hint:'terminal',chip:'Radial nerve',                  chipClass:'chip-rose',   pip:'#fb7185'},
+  {id:'ax',  group:'Terminal', hint:'terminal',chip:'Axillary nerve',                chipClass:'chip-rose',   pip:'#fb7185'},
+  {id:'uln', group:'Terminal', hint:'terminal',chip:'Ulnar nerve',                   chipClass:'chip-rose',   pip:'#fb7185'},
+  {id:'ct',  group:'Tunnels',  hint:'tunnel',  chip:'Carpal tunnel (median)',        chipClass:'chip-amber',  pip:'#fbbf24'},
+  {id:'cub', group:'Tunnels',  hint:'tunnel',  chip:'Cubital tunnel (ulnar)',        chipClass:'chip-amber',  pip:'#fbbf24'},
+  {id:'guy', group:'Tunnels',  hint:'tunnel',  chip:"Guyon's canal (ulnar)",         chipClass:'chip-amber',  pip:'#fbbf24'},
+  {id:'spi', group:'Tunnels',  hint:'tunnel',  chip:'Spiral groove (radial)',        chipClass:'chip-amber',  pip:'#fbbf24'},
+  {id:'pro', group:'Tunnels',  hint:'tunnel',  chip:'Pronator tunnel (median)',      chipClass:'chip-amber',  pip:'#fbbf24'},
+  {id:'qls', group:'Tunnels',  hint:'tunnel',  chip:'Quadrilateral space (axillary)',chipClass:'chip-amber',  pip:'#fbbf24'},
+];
+
+const GROUP_META = {
+  'Roots':    { label:'Roots (C5–T1)',              pip:'#8b5cf6' },
+  'Trunks':   { label:'Trunks',                     pip:'#10b981' },
+  'Cords':    { label:'Cords',                      pip:'#38bdf8' },
+  'Terminal': { label:'Terminal nerves',             pip:'#fb7185' },
+  'Tunnels':  { label:'Tunnels & compression sites',pip:'#fbbf24' },
+};
+
+let state={}, dragging=null, correct=0, attempted=0;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function buildBoard(){
+  document.getElementById('board-col').innerHTML='';
+  document.getElementById('chip-bank').innerHTML='';
+  document.getElementById('victory').style.display='none';
+  state={}; correct=0; attempted=0;
+  updateScore();
+
+  const groups=[...new Set(ZONES.map(z=>z.group))];
+  const col=document.getElementById('board-col');
+
+  groups.forEach(g=>{
+    const meta=GROUP_META[g];
+    const zonesInGroup=ZONES.filter(z=>z.group===g);
+    const wrap=document.createElement('div');
+    wrap.className='zone-group';
+
+    // separator
+    const sep=document.createElement('div');
+    sep.className='section-sep';
+    sep.innerHTML=`
+      <div class="sep-dot" style="background:${meta.pip};box-shadow:0 0 6px ${meta.pip}66"></div>
+      <span class="sep-label">${meta.label}</span>
+      <div class="sep-line"></div>`;
+    wrap.appendChild(sep);
+
+    zonesInGroup.forEach(z=>{
+      const dz=document.createElement('div');
+      dz.className='drop-zone';
+      dz.id='zone-'+z.id;
+      dz.dataset.zoneId=z.id;
+
+      const icon=document.createElement('span');
+      icon.className='status-icon';
+      dz.appendChild(icon);
+
+      const ph=document.createElement('span');
+      ph.className='zone-placeholder';
+      ph.textContent='Drop here…';
+      dz.appendChild(ph);
+
+      const hint=document.createElement('span');
+      hint.className='zone-hint';
+      hint.textContent=z.hint;
+      dz.appendChild(hint);
+
+      dz.addEventListener('dragover',e=>{e.preventDefault();if(!state[z.id])dz.classList.add('drag-over')});
+      dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+      dz.addEventListener('drop',onDrop);
+      wrap.appendChild(dz);
+    });
+    col.appendChild(wrap);
+  });
+
+  // chips
+  const bank=document.getElementById('chip-bank');
+  shuffle([...ZONES]).forEach(z=>{
+    const c=document.createElement('div');
+    c.className='chip '+z.chipClass;
+    c.id='chip-'+z.id;
+    c.draggable=true;
+    c.dataset.chipId=z.id;
+    c.textContent=z.chip;
+    c.addEventListener('dragstart',e=>{dragging=z.id;c.classList.add('dragging');e.dataTransfer.effectAllowed='move'});
+    c.addEventListener('dragend',()=>{c.classList.remove('dragging');dragging=null});
+    bank.appendChild(c);
+  });
+}
+
+function onDrop(e){
+  e.preventDefault();
+  const dz=e.currentTarget;
+  dz.classList.remove('drag-over');
+  const zoneId=dz.dataset.zoneId;
+  if(state[zoneId]||!dragging) return;
+
+  const chipEl=document.getElementById('chip-'+dragging);
+  if(!chipEl) return;
+  chipEl.draggable=false;
+  chipEl.remove();
+
+  const isCorrect=dragging===zoneId;
+  attempted++; if(isCorrect) correct++;
+  state[zoneId]=dragging;
+
+  dz.classList.add('filled', isCorrect?'correct':'wrong');
+
+  const placedZ=ZONES.find(v=>v.id===dragging);
+  const targetZ=ZONES.find(v=>v.id===zoneId);
+
+  dz.querySelector('.status-icon').textContent=isCorrect?'✓':'✗';
+
+  const lbl=document.createElement('span');
+  lbl.className='zone-placed-text';
+  lbl.textContent=isCorrect
+    ? placedZ.chip
+    : `${placedZ.chip}  ·  correct: ${targetZ.chip}`;
+  dz.insertBefore(lbl, dz.querySelector('.zone-hint'));
+
+  dragging=null;
+  updateScore();
+  if(Object.keys(state).length===ZONES.length) showVictory();
+}
+
+function updateScore(){
+  const placed=Object.keys(state).length;
+  document.getElementById('sc-c').textContent=correct;
+  document.getElementById('sc-a').textContent=attempted;
+  document.getElementById('prog').style.width=Math.round(placed/ZONES.length*100)+'%';
+}
+
+function showVictory(){
+  const pct=Math.round(correct/attempted*100);
+  const msgs={100:'Perfect score — boards ready.',80:'Strong. Review the red ones.',0:'Reset and try again!'};
+  const msg=pct===100?msgs[100]:pct>=80?msgs[80]:msgs[0];
+  document.getElementById('v-title').textContent=pct===100?'Perfect score!':pct>=80?'Great work!':'Keep practicing!';
+  document.getElementById('v-sub').textContent=msg;
+  document.getElementById('v-pct').textContent=pct+'%';
+  document.getElementById('v-detail').textContent=`${correct} / ${attempted} correct`;
+  const el=document.getElementById('victory');
+  el.style.display='block';
+  el.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function resetQuiz(){
+  buildBoard();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+buildBoard();
+</script>
+</body>
+</html>
